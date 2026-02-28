@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Witness | Emergency Portal</title>
+    <style>
+        :root { --red: #ff4b2b; --dark: #1a1a1a; }
+        body { 
+            margin: 0; font-family: 'Segoe UI', sans-serif; 
+            background: var(--dark); color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* Navigation Button */
+        .nav-header {
+            position: absolute; top: 20px; right: 20px;
+        }
+        .vault-link {
+            background: #333; color: #aaa; text-decoration: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem;
+            border: 1px solid #444; transition: 0.3s;
+        }
+        .vault-link:hover { background: #444; color: white; }
+
+        #status { font-size: 1.1rem; margin-bottom: 1.5rem; color: #aaa; text-align: center; padding: 0 20px; }
+        .recording-pulse { color: var(--red) !important; animation: pulse 1s infinite; }
+        
+        .contact-box { margin-bottom: 20px; text-align: center; }
+        #emergencyContact {
+            padding: 12px; border-radius: 8px; border: 1px solid #444; 
+            background: #222; color: white; width: 260px; text-align: center;
+        }
+
+        #witnessBtn {
+            width: 180px; height: 180px; border-radius: 50%; border: 8px solid #333;
+            background: var(--red); color: white; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(255, 75, 43, 0.4);
+        }
+        #witnessBtn:active { transform: scale(0.9); box-shadow: 0 0 10px rgba(255, 75, 43, 0.8); }
+        #witnessBtn:disabled { background: #444; border-color: #222; cursor: wait; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="receiver.html" class="vault-link">📂 VIEW VAULT</a>
+    </div>
+
+    <div class="contact-box">
+        <input type="text" id="emergencyContact" placeholder="Emergency Contact Name/Phone">
+        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Contact info is saved automatically</p>
+    </div>
+
+    <div id="status">Ready for Witness Capture</div>
+    <button id="witnessBtn">START WITNESS</button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "digitalwitness-91e06.firebaseapp.com",
+            projectId: "digitalwitness-91e06",
+            storageBucket: "digitalwitness-91e06.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const btn = document.getElementById('witnessBtn');
+        const statusDiv = document.getElementById('status');
+        const contactInput = document.getElementById('emergencyContact');
+        
+        contactInput.value = localStorage.getItem('witness_contact') || "";
+        contactInput.oninput = () => {
+            localStorage.setItem('witness_contact', contactInput.value);
+        };
+
+        btn.onclick = async () => {
+            try {
+                btn.disabled = true;
+                statusDiv.innerText = "📍 SECURING LOCATION...";
+
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+                });
+
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 320, height: 240, frameRate: 15 }, 
+                    audio: true 
+                });
+
+                btn.innerText = "RECORDING...";
+                statusDiv.innerText = "🔴 SECURING LIVE EVIDENCE...";
+                statusDiv.classList.add('recording-pulse');
+
+                let chunks = [];
+                const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    statusDiv.innerText = "⚙️ ENCRYPTING & UPLOADING...";
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => {
+                        const base64String = reader.result;
+
+                        try {
+                            await addDoc(collection(db, "reports"), {
+                                emergencyContact: contactInput.value,
+                                location: {
+                                    latitude: lat,
+                                    longitude: lon,
+                                    googleMapsUrl: `https://www.google.com/maps?q=${lat},${lon}`
+                                },
+                                localTime: new Date().toLocaleString(),
+                                createdAt: serverTimestamp(),
+                                status: "Active Evidence",
+                                videoData: base64String
+                            });
+                            
+                            statusDiv.classList.remove('recording-pulse');
+                            statusDiv.innerHTML = "✅ EVIDENCE SECURED";
+                            btn.innerText = "DONE";
+                            btn.style.background = "#2e7d32";
+                        } catch (e) {
+                            statusDiv.innerText = "Upload Error: " + e.message;
+                            btn.disabled = false;
+                        }
+                    };
+                };
+
+                mediaRecorder.start();
+
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    stream.getTracks().forEach(track => track.stop());
+                }, 6000);
+
+            } catch (err) {
+                statusDiv.innerText = "Error: Check GPS/Camera Permissions";
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital Witness - Evidence Vault</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 40px; text-align: center; }
+        
+        /* Navigation Button */
+        .nav-header {
+            position: absolute; top: 20px; left: 20px;
+        }
+        .back-link {
+            background: #333; color: #aaa; text-decoration: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem;
+            border: 1px solid #444; transition: 0.3s;
+        }
+        .back-link:hover { background: #ff4b2b; color: white; border-color: #ff4b2b; }
+
+        .video-container { 
+            background: #1e1e1e; padding: 20px; border-radius: 15px; 
+            margin: 20px auto; max-width: 500px; border: 1px solid #333;
+            text-align: left; 
+        }
+        video { width: 100%; border-radius: 10px; border: 2px solid #ff4b2b; margin-top: 10px; }
+        h1 { color: #ff4b2b; margin-top: 20px; }
+        .info-row { margin: 8px 0; font-size: 0.95rem; }
+        .label { color: #ff4b2b; font-weight: bold; }
+        .timestamp { color: #888; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .map-link { 
+            display: inline-block; margin-top: 10px; padding: 10px 20px; 
+            background: #ff4b2b; color: white; text-decoration: none; 
+            border-radius: 5px; font-weight: bold; font-size: 0.9rem;
+        }
+        .map-link:hover { background: #e03a1d; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="index.html" class="back-link">⬅️ BACK TO CAMERA</a>
+    </div>
+
+    <h1>Evidence Receiver</h1>
+    <p>Monitoring live uploads from the field...</p>
+    
+    <div id="displayArea">Fetching reports from Firestore...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Ensure this matches your index.html config exactly
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "digitalwitness-91e06.firebaseapp.com",
+            projectId: "digitalwitness-91e06",
+            storageBucket: "digitalwitness-91e06.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const displayArea = document.getElementById('displayArea');
+            displayArea.innerHTML = ""; 
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const div = document.createElement('div');
+                div.className = 'video-container';
+                
+                if (data.videoData) {
+                    // Logic to extract lat/lon for the map link
+                    let mapUrl = "#";
+                    if(data.location && data.location.latitude) {
+                        mapUrl = `https://www.google.com/maps?q=${data.location.latitude},${data.location.longitude}`;
+                    }
+
+                    div.innerHTML = `
+                        <div class="timestamp">
+                            <span class="label">Recorded:</span> ${data.localTime || 'N/A'}
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">👤 Emergency Contact:</span> ${data.emergencyContact || 'Not Provided'}
+                        </div>
+
+                        <div class="info-row">
+                            <span class="label">📍 Location:</span> 
+                            ${data.location ? `${data.location.latitude.toFixed(5)}, ${data.location.longitude.toFixed(5)}` : 'Unknown'}
+                        </div>
+
+                        <video controls>
+                            <source src="${data.videoData}" type="video/webm">
+                        </video>
+
+                        <div style="text-align: center;">
+                            <a href="${mapUrl}" target="_blank" class="map-link">📍 VIEW ON GOOGLE MAPS</a>
+                        </div>
+                        
+                        <p style="font-size: 0.8rem; color: #555; margin-top: 15px;">Status: ${data.status}</p>
+                    `;
+                }
+                displayArea.appendChild(div);
+            });
+        });
+    </script>
+</body>
+</html>
+       
