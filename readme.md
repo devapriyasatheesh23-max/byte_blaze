@@ -2,27 +2,31 @@
   <img src="./img.png" alt="Project Banner" width="100%">
 </p>
 
-# [Project Name] 🎯
+# [DIGITAL WITNESS] 🎯
 
 ## Basic Details
 
-### Team Name: [Name]
+### Team Name: [BYTE BLAZE]
 
 ### Team Members
-- Member 1: [Name] - [College]
-- Member 2: [Name] - [College]
+- Member 1: [DEVAPRIYA S] - [GOVERNMENT ENGINEERING COLLEGE PALAKKAD]
+- Member 2: [ATHIRA P] - [GOVERNMENT ENGINEERING COLLEGE PALAKKAD]
 
 ### Hosted Project Link
-[mention your project hosted link here]
+[[mention your project hosted link here](https://devapriyasatheesh23-max.github.io/byte_blaze/)]
 
 ### Project Description
-[2-3 lines about what your project does]
+[Digital Witness is a web-based emergency system that automatically records and uploads video evidence when the user presses an emergency button. The system captures real-time footage and stores it securely in a cloud database with a timestamp. This helps ensure quick evidence collection during critical situations]
 
 ### The Problem statement
-[What problem are you solving?]
+[During incidents of harassment, accidents, or confrontations, victims often attempt to record video evidence. However, if an aggressor seizes the phone or forces the user to delete the footage, the evidence is lost forever. Furthermore, emergency responders often lack the precise, real-time location of the victim at the exact moment the incident occurs.]
 
 ### The Solution
-[How are you solving it?]
+[Digital Witness bridges this gap using a "Cloud-First" architecture. The project consists of two synchronized interfaces:
+
+The Witness Portal (Sender): Designed with a "Zero-Friction" interface, a single tap triggers an immediate 6-second video and audio capture. Instead of saving to the phone's gallery, the video is instantly encoded into a Base64 string and pushed to a Firebase Firestore database. Simultaneously, the device's hardware-level GPS coordinates are captured and attached to the report.
+
+The Evidence Vault (Receiver): This dashboard uses real-time listeners (onSnapshot) to monitor incoming reports. As soon as a witness begins recording, the data appears on the dashboard without a page refresh. Responders can view the video and click a dynamically generated link to open the witness's exact location in Google Maps.]
 
 ---
 
@@ -31,10 +35,10 @@
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: [e.g., JavaScript, Python, Java]
-- Frameworks used: [e.g., React, Django, Spring Boot]
-- Libraries used: [e.g., axios, pandas, JUnit]
-- Tools used: [e.g., VS Code, Git, Docker]
+- Languages used: [ JavaScript, html]
+- Frameworks used: [none]
+- Libraries used: [firebase,browser native libraries ]
+- Tools used: [ VS Code, Git]
 
 **For Hardware:**
 - Main components: [List main components]
@@ -46,10 +50,10 @@
 ## Features
 
 List the key features of your project:
-- Feature 1: [Description]
-- Feature 2: [Description]
-- Feature 3: [Description]
-- Feature 4: [Description]
+- Feature 1: [instant cloud sync]
+- Feature 2: [real time dashboard]
+- Feature 3: [GPS evidence mapping]
+- Feature 4: [tamper proof logging]
 
 ---
 
@@ -416,5 +420,6 @@ This project is licensed under the [LICENSE_NAME] License - see the [LICENSE](LI
 - GPL v3 (Copyleft, requires derivative works to be open source)
 
 ---
+
 
 Made with ❤️ at TinkerHub
